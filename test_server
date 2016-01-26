@@ -7,6 +7,7 @@ from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
 from SocketServer import ThreadingMixIn
 import StringIO
 import time
+import datetime
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 	pass
@@ -18,18 +19,46 @@ class CamHandler(BaseHTTPRequestHandler):
 			self.send_response(200)
 			self.send_header('Content-type','multipart/x-mixed-replace; boundary=--jpgboundary')
 			self.end_headers()
+			avg = None
 			while True:
 				try:
 					rc,img = cap.read()
 					if not rc:
 						continue
 					gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-					edge = cv2.blur(gray, (3,3))
-					edgeThresh = 40
-					edge = cv2.Canny(edge, edgeThresh, edgeThresh*3, apertureSize=3)
-					edge = cv2.dilate(edge, numpy.ones((3,3),numpy.uint8))
-					imgRGB = cv2.bitwise_and(img, img, mask = edge)
-					imgRGB = cv2.cvtColor(imgRGB, cv2.COLOR_BGR2RGB)
+					#####
+					frame = cv2.GaussianBlur(gray, (21, 21), 0)
+					#text = "Unoccupied"
+					if avg is None:
+						avg = frame.copy().astype("float")
+						continue
+					cv2.accumulateWeighted(frame, avg, 0.5)
+					myDelta = cv2.absdiff(frame, cv2.convertScaleAbs(avg))
+					thresh = cv2.threshold(myDelta, 5, 255, cv2.THRESH_BINARY)[1]
+					thresh = cv2.dilate(thresh, None, iterations=2)
+					(cnts, _) = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)	
+					result = []
+					for c in cnts:
+						if cv2.contourArea(c) >= 900:
+							result.append(c)
+							#text = "Occupied"
+
+					if result or not ('imgRGB' in locals()):
+					#####
+						edge = cv2.blur(gray, (3,3))
+						edgeThresh = 40
+						edge = cv2.Canny(edge, edgeThresh, edgeThresh*3, apertureSize=3)
+						edge = cv2.dilate(edge, numpy.ones((3,3),numpy.uint8))
+						imgRGB = cv2.bitwise_and(img, img, mask = edge)
+						imgRGB = cv2.cvtColor(imgRGB, cv2.COLOR_BGR2RGB)
+					#####
+						for c in result:
+							(x, y, w, h) = cv2.boundingRect(c)
+							cv2.rectangle(imgRGB, (x, y), (x + w, y + h), (0, 255, 0), 2)
+						#cv2.putText(imgRGB, "{}".format(text), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+						ts = datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p")
+						cv2.putText(imgRGB, ts, (10, imgRGB.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 0, 0), 1)
+					#####
 					jpg = Image.fromarray(imgRGB)
 					tmpFile = StringIO.StringIO()
 					jpg.save(tmpFile,'JPEG')
