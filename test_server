@@ -4,8 +4,13 @@ import numpy
 import cv2, sys
 import Image
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
+from SocketServer import ThreadingMixIn
 import StringIO
 import time
+
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+	pass
+
 cap=None
 
 class CamHandler(BaseHTTPRequestHandler):
@@ -53,7 +58,7 @@ def main():
 
 	global img
 	try:
-		server = HTTPServer(('',8081),CamHandler)
+		server = ThreadedHTTPServer(('',8081),CamHandler)
 		print "server started"
 		server.serve_forever()
 	except KeyboardInterrupt:
