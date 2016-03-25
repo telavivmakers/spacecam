@@ -54,7 +54,7 @@ class CamHandler(BaseHTTPRequestHandler):
 					#####
 						for c in result:
 							(x, y, w, h) = cv2.boundingRect(c)
-							cv2.rectangle(imgRGB, (x, y), (x + w, y + h), (0, 255, 0), 2)
+							cv2.rectangle(imgRGB, (x, y), (x + w, y + h), (0, 255, 0), -1)
 						#cv2.putText(imgRGB, "{}".format(text), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
 						ts = datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p")
 						cv2.putText(imgRGB, ts, (10, imgRGB.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 0, 0), 1)
