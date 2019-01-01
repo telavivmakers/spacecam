@@ -18,6 +18,8 @@ cap=None
 class CamHandler(BaseHTTPRequestHandler):
 	def do_GET(self):
 			self.send_response(200)
+			self.send_header('Access-Control-Allow-Credentials', 'true')
+			self.send_header('Access-Control-Allow-Origin', 'true')
 			self.send_header('Content-type','multipart/x-mixed-replace; boundary=--jpgboundary')
 			self.end_headers()
 			avg = None
@@ -56,7 +58,7 @@ class CamHandler(BaseHTTPRequestHandler):
 						for c in result:
 					 		(x, y, w, h) = cv2.boundingRect(c)
                                                         imgRGB[y:y+h, x:x+w] = numpy.random.randint(256, size=(h,w,3))
-#### DOWN WITH BIG BROTHER ###
+							#### DOWN WITH BIG BROTHER ###
 						        #cv2.rectangle(imgRGB, (x, y), (x + w, y + h), (0, 255, 0), 2)
 						        #cv2.rectangle(imgRGB, (x, y), (x + w, y + h), (0, 255, 0), -1)
 						#cv2.putText(imgRGB, "{}".format(text), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
@@ -66,7 +68,7 @@ class CamHandler(BaseHTTPRequestHandler):
 					jpg = Image.fromarray(imgRGB)
 					tmpFile = StringIO.StringIO()
 					jpg.save(tmpFile,'JPEG')
-					self.wfile.write("--jpgboundary")
+					self.wfile.write("--jpgboundary\n")
 					self.send_header('Content-type','image/jpeg')
 					self.send_header('Content-length',str(tmpFile.len))
 					self.end_headers()
