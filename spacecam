@@ -10,14 +10,29 @@ import StringIO
 import time
 import datetime
 from pytz import timezone
+from os.path import exists
+
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 	pass
 
-cap=None
+
+cap = None
+
+
+showthis_filename = '/home/tami/TAMI_camera/showthis.jpg'
 
 class CamHandler(BaseHTTPRequestHandler):
 	def do_GET(self):
+			if exists(showthis_filename):
+				self.send_response(200)
+				self.send_header('Content-type','image/jpeg')
+				with open(showthis_filename, 'rb') as fd:
+					img = fd.read()
+				self.send_header('Content-length', str(len(img)))
+				self.end_headers()
+				self.wfile.write(img)
+				return
 			self.send_response(200)
 			self.send_header('Access-Control-Allow-Credentials', 'true')
 			self.send_header('Access-Control-Allow-Origin', 'true')
